@@ -10,13 +10,13 @@ public class HangmanClient {
     private static final String SERVER_IP = "127.0.0.1"; // or your server IP
     private static final int SERVER_PORT = 12345;
     private static final String[] HANGMAN_STAGES = {
-            "+---+\n    |\n    |\n    |\n   ===", // initial state
-            "+---+\n O  |\n    |\n    |\n   ===", // head
-            "+---+\n O  |\n |  |\n    |\n   ===", // body
-            "+---+\n O  |\n/|  |\n    |\n   ===", // left arm
-            "+---+\n O  |\n/|\\ |\n    |\n   ===", // right arm
+            "+---+\n O  |\n/|\\ |\n/ \\ |\n   ===",  // right leg
             "+---+\n O  |\n/|\\ |\n/   |\n   ===", // left leg
-            "+---+\n O  |\n/|\\ |\n/ \\ |\n   ==="  // right leg
+            "+---+\n O  |\n/|\\ |\n    |\n   ===", // right arm
+            "+---+\n O  |\n/|  |\n    |\n   ===", // left arm
+            "+---+\n O  |\n |  |\n    |\n   ===", // body
+            "+---+\n O  |\n    |\n    |\n   ===", // head
+            "+---+\n    |\n    |\n    |\n   ===" // initial state
     };
 
     public static void main(String[] args) {
@@ -26,11 +26,12 @@ public class HangmanClient {
              Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8.name())) {
 
             System.out.println("Connected to Hangman Server");
-            int wrongGuesses = 0;
+
 
             // Reading messages from server
             String fromServer = in.readLine();
             System.out.println("Server: " + fromServer);
+            int availableGuess = fromServer.split(" ")[1].length();
 
             // Check if the connection is initialized
             if (fromServer.startsWith("INIT")) {
@@ -53,19 +54,20 @@ public class HangmanClient {
                     System.out.println("Server: " + fromServer);
 
                     // Update hangman figure if the guess was wrong
-                    if (fromServer.startsWith("MISS")) {
-                        wrongGuesses++;
+                    if (fromServer.startsWith("MISS") && availableGuess > 0) {
+                        availableGuess--;
                     }
 
                     // Display the current state of the hangman
-                    System.out.println(HANGMAN_STAGES[Math.min(wrongGuesses, HANGMAN_STAGES.length - 1)]);
+                    System.out.println(HANGMAN_STAGES[Math.min(availableGuess, HANGMAN_STAGES.length - 1)]);
+
+                    if(availableGuess == 0){
+                        fromServer = in.readLine();
+                    }
 
                     // Check for game over conditions
                     if (fromServer.startsWith("GAME OVER")) {
-                        System.out.println("Game over!");
-                        if (fromServer.contains("LOSS")) {
-                            System.out.println(HANGMAN_STAGES[HANGMAN_STAGES.length - 1]);
-                        }
+                        System.out.println("Server: " + fromServer);
                         break;
                     }
                 }

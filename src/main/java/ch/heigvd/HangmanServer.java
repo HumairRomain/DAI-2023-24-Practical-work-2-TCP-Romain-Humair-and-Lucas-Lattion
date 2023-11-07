@@ -16,8 +16,8 @@ public class HangmanServer {
             while (true) {
                 try {
                     Socket clientSocket = serverSocket.accept();
-                    System.out.println("New client connected");
                     new ClientHandler(clientSocket).start();
+
 
                 } catch (IOException e) {
                     System.err.println("Exception caught when trying to listen on port "
@@ -38,6 +38,9 @@ public class HangmanServer {
         private int attemptsLeft;
         private String visibleWord;
 
+        private static char initID = 'A';
+        private char clientID = initID;
+
         public ClientHandler(Socket socket) {
             this.clientSocket = socket;
             this.wordToGuess = fetchRandomWord().toLowerCase();
@@ -57,6 +60,9 @@ public class HangmanServer {
             try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
                  PrintWriter out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8), true)) {
 
+                initID++;
+                System.out.println("New client " + clientID + " connected");
+
                 out.println("INIT " + visibleWord + " " + attemptsLeft);
 
                 String inputLine;
@@ -69,11 +75,14 @@ public class HangmanServer {
                     }
 
                     if (visibleWord.equalsIgnoreCase(wordToGuess)) {
-                        out.println("GAME OVER WIN " + wordToGuess);
+                        out.println("GAME OVER WIN with the word " + wordToGuess);
                     } else if (attemptsLeft <= 0) {
-                        out.println("GAME OVER LOSS " + wordToGuess);
+                        out.println("GAME OVER LOSS the word was " + wordToGuess);
                     }
                 }
+
+                System.out.println("Client " + clientID + " disconnected");
+
             } catch (IOException e) {
                 System.err.println("Exception caught when trying to interact with a client.");
                 e.printStackTrace();
@@ -93,7 +102,7 @@ public class HangmanServer {
             if (guess.length() == 1) {
                 char letter = guess.charAt(0);
                 if (guessedLetters.contains(letter)) {
-                    out.println("ERR Already guessed");
+                    out.println("ERR 2 Already guessed");
                 } else {
                     guessedLetters.add(letter);
                     if (wordToGuess.contains(guess)) {
@@ -104,6 +113,8 @@ public class HangmanServer {
                         out.println("MISS " + attemptsLeft + " " + visibleWord);
                     }
                 }
+            } else if(guess.length() == 0 || guess.length() < visibleWord.length() || guess.length() > visibleWord.length()){
+                out.println("ERR 6 Invalid guess length");
             } else if (guess.equalsIgnoreCase(wordToGuess)) {
                 visibleWord = wordToGuess;
                 out.println("GAME OVER WIN " + wordToGuess);
