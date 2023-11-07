@@ -14,7 +14,7 @@ This document specifies the application protocol for a Hangman game played over 
 ## Section 2 - Transport Protocol
 
 - **Protocol**: TCP/IP
-- **Port**: The server listens on port **97XX** for incoming connections (The port is link to our birth year 1997 and 19XX. The port is not commonly used by other services).
+- **Port**: The server listens on port **9795** for incoming connections (The port is link to our birth year 1997 and 1995. The port is not commonly used by other services).
 - **Connection**: The client initiates the TCP connection to the server. The connection must be established with a TCP three-way handshake before any game data is exchanged.
 - **Session**: The server maintains session state for each connected client. This includes the current word, guesses made, and number of attempts left.
 
@@ -36,7 +36,7 @@ This document specifies the application protocol for a Hangman game played over 
 - `GAME OVER <result>` (Server -> Client): Final game status, indicating win/loss and the correct word if lost.
 
 ### Connection Teardown
-- `FIN` (Client -> Server or Server -> Client): Initiate connection teardown.
+- `END` (Client -> Server or Server -> Client): Initiate connection teardown.
 - `ACK` (Server -> Client or Client -> Server): Acknowledge FIN.
 
 ### Error Handling
@@ -65,6 +65,23 @@ Client                               Server
   |<--FIN------------------------------|
   |---ACK----------------------------->|
   |                                    |
+```
+```mermaid
+sequenceDiagram
+  Client->>Server: SYN
+  Server-->>Client: SYN ACK
+  Client-->>Server: ACK
+
+  Server->>Client: INIT "5" "_ _ _ _ _"
+  Client->>Server: GUESS "E"
+  Server-->>Client: RESPONSE "0" "_ E _ _ _"
+
+  Client->>Server: GUESS "ZEBRA"
+  Server-->>Client: GAME OVER "WIN" "Z E B R A"
+
+  Client->>Server: END
+  Server-->>Client: ACK
+  Server->>Client: END
 ```
 
 ### Error Code Definitions
@@ -97,6 +114,29 @@ Client                               Server
   |                                    |
 ```
 
+```mermaid
+sequenceDiagram
+  Client->>Server: GUESS "1"
+  Server-->>Client: ERR "1"
+
+  Client->>Server: GUESS "E"
+  Server-->>Client: ERR "2"
+
+  Client->>Server: GUESS "XYZ"
+  Server-->>Client: ERR "1"
+
+  Client->>Server: GUESS "E@_/"
+  Server->>Client: ERR "1"
+```
+
+
+### Malformed Message Format
+
+The server responds with an error code indicating an invalid character when it receives a malformed guess message. This prevents any further processing of an invalid request.
+
+Implementing these protocols and edge-case management ensures a robust and user-friendly Hangman game experience over a TCP/IP connection.
+
+
 ## Edge Cases
 
 Edge cases could include network interruptions, client disconnections, and malformed message formats. Each case should be handled gracefully, with the server providing an appropriate error code and message to the client, or by timing out the connection after a certain period of inactivity.
@@ -115,23 +155,19 @@ Client                               Server
   |                                    |
 ```
 
+```mermaid
+sequenceDiagram
+  Client->>Server: GUESS "E"
+  Note over Client,Server: Network interruption
+  Server->>Client: No Response, Timeout
+
+  Client->>Server: END
+  Server-->>Client: ACK
+```
+
 In this diagram, the client sends a guess but experiences a network interruption that prevents the server's response. After a timeout, the client will close the connection.
 
-### Malformed Message Format
 
-```
-Client                               Server
-  |                                    |
-  |---GUESS "E@#%"-------------------->| (Malformed message with special characters)
-  |<--ERR "1"--------------------------|
-  |                                    |
-```
-
-The server responds with an
-
-error code indicating an invalid character when it receives a malformed guess message. This prevents any further processing of an invalid request.
-
-Implementing these protocols and edge-case management ensures a robust and user-friendly Hangman game experience over a TCP/IP connection.
 
 
 ## Tool used
