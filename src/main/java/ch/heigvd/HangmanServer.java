@@ -5,19 +5,27 @@ import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class HangmanServer {
+    private static final int NUMBER_OF_THREADS = 2;
 
     public static void main(String[] args) {
 
         int port = Integer.parseInt(args[0]);
 
+        ExecutorService executor = null;
+
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Hangman Server is listening on port " + port);
+
+            executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
 
             while (true) {
                 try {
                     Socket clientSocket = serverSocket.accept();
-                    new ClientHandler(clientSocket).start();
+                    executor.submit(new ClientHandler(clientSocket));
 
 
                 } catch (IOException e) {
@@ -29,6 +37,10 @@ public class HangmanServer {
         } catch (IOException e) {
             System.err.println("Could not listen on port " + port);
             System.err.println(e.getMessage());
+        } finally {
+            if (executor != null) {
+                executor.shutdown();
+            }
         }
     }
 
