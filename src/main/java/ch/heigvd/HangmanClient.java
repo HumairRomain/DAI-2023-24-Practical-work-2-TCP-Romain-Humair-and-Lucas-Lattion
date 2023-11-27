@@ -4,11 +4,9 @@ import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
 public class HangmanClient {
-
-    private static final String SERVER_IP = "127.0.0.1"; // or your server IP
-    private static final int SERVER_PORT = 12345;
     private static final String[] HANGMAN_STAGES = {
             "+---+\n O  |\n/|\\ |\n/ \\ |\n   ===",  // right leg
             "+---+\n O  |\n/|\\ |\n/   |\n   ===", // left leg
@@ -19,8 +17,30 @@ public class HangmanClient {
             "+---+\n    |\n    |\n    |\n   ===" // initial state
     };
 
+    private static final String ipPattern = "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\."
+            + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\."
+            + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\."
+            + "([01]?\\d\\d?|2[0-4]\\d|25[0-5])$";
+
+
     public static void main(String[] args) {
-        try (Socket socket = new Socket(SERVER_IP, SERVER_PORT);
+
+        if (args.length != 2) {
+            System.out.println("Usage: java Client <server-ip> <port>");
+            return;
+        }
+
+
+        String serverIp = args[0];
+        int serverPort = Integer.parseInt(args[1]);
+
+        if(!isValidIpAddress(serverIp)){
+            System.out.println("Please provide a valid server IP address.");
+            return;
+        }
+
+
+        try (Socket socket = new Socket(serverIp, serverPort);
              PrintWriter out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
              Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8.name())) {
@@ -73,12 +93,16 @@ public class HangmanClient {
                 }
             }
         } catch (UnknownHostException e) {
-            System.err.println("Don't know about host " + SERVER_IP);
+            System.err.println("Don't know about host " + serverIp);
             System.exit(1);
         } catch (IOException e) {
             System.err.println("Couldn't get I/O for the connection to " +
-                    SERVER_IP);
+                    serverIp + ":" + serverPort);
             System.exit(1);
         }
+    }
+
+    private static boolean isValidIpAddress(String ipAddress) {
+        return Pattern.matches(ipPattern, ipAddress) || ipAddress.equalsIgnoreCase("localhost");
     }
 }
