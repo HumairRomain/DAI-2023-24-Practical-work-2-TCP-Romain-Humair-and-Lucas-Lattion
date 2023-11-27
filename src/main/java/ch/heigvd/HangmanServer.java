@@ -38,8 +38,8 @@ public class HangmanServer {
         private int attemptsLeft;
         private String visibleWord;
 
-        private static char initID = 'A';
-        private char clientID = initID;
+        private static int initID = 0;
+        private int clientID = initID;
 
         public ClientHandler(Socket socket) {
             this.clientSocket = socket;
@@ -74,10 +74,8 @@ public class HangmanServer {
                         out.println("ERR Invalid command");
                     }
 
-                    if (visibleWord.equalsIgnoreCase(wordToGuess)) {
-                        out.println("GAME OVER WIN with the word " + wordToGuess);
-                    } else if (attemptsLeft <= 0) {
-                        out.println("GAME OVER LOSS the word was " + wordToGuess);
+                    if (attemptsLeft <= 0) {
+                        out.println("GAME OVER LOSS " + wordToGuess);
                     }
                 }
 
@@ -107,7 +105,11 @@ public class HangmanServer {
                     guessedLetters.add(letter);
                     if (wordToGuess.contains(guess)) {
                         updateVisibleWord(letter);
-                        out.println("HIT " + visibleWord);
+                        if(visibleWord.equalsIgnoreCase(wordToGuess)) {
+                            out.println("GAME OVER WIN " + wordToGuess);
+                        } else {
+                            out.println("HIT " + visibleWord);
+                        }
                     } else {
                         attemptsLeft--;
                         out.println("MISS " + attemptsLeft + " " + visibleWord);
