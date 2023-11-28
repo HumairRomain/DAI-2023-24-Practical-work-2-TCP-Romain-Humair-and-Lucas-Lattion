@@ -24,6 +24,9 @@ public class Hangman implements Callable<Void> {
     @Option(names = {"-i", "--ip"}, description = "Server IP address (default : localhost)")
     private String serverIp = "localhost";
 
+    @Option(names = {"-t", "--thread"}, description = "Server pool thread (default : 2)")
+    private int maxThread = 2;
+
 
     public static void main(String[] args) {
         int exitCode = new CommandLine(new Hangman()).execute(args);
@@ -43,9 +46,9 @@ public class Hangman implements Callable<Void> {
     }
 
     private void startServer() {
-        System.out.println("Starting TCP server on port " + port);
+        System.out.println("Starting TCP server on port " + port + " with pool thread of " + maxThread);
         // Create an instance of Server and invoke its main method
-        HangmanServer.main(new String[]{String.valueOf(port)});
+        HangmanServer.main(new String[]{String.valueOf(maxThread), String.valueOf(port)});
     }
 
     private void startClient() {

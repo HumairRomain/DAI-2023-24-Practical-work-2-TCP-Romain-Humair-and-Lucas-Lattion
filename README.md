@@ -3,7 +3,79 @@
 * Lucas Lattion
 * Romain Humair
 
-# A Hangman Game
+# A Hangman Game CLI
+
+## How to use the CLI
+
+minimum parameter is client or server mode
+
+cmd
+```
+java -jar hangmanGame-1.0-SNAPSHOT.jar
+```
+result
+```
+Please specify either --server or --client option.
+```
+
+Client mode can be selected with option `-c` or `--client`. You can also select the port (`-p, --port=<port>`) and ip (`-i, --ip=<serverIp>`) options
+
+Server mode can be selected with option `-s` or `--server`. You can also select the port (`-p, --port=<port>`) and max thread (`-t, --thread=<maxThread>`) options
+
+Default values :
+* port is defined by the application protocole and is set to `9795`
+* ip is `localhost`
+* pool thread is `2`
+
+
+
+## Help
+cmd
+```
+java -jar hangmanGame-1.0-SNAPSHOT.jar -h
+```
+result
+```
+Usage: hangman game [-chsV] [-i=<serverIp>] [-p=<port>] [-t=<maxThread>]
+                    [COMMAND]
+Play the hangman game
+  -c, --client               Run as TCP client
+  -h, --help                 Show this help message and exit.
+  -i, --ip=<serverIp>        Server IP address (default : localhost)
+  -p, --port=<port>          Port number (default : 9795)
+  -s, --server               Run as TCP server
+  -t, --thread=<maxThread>   Server pool thread (default : 2)
+  -V, --version              Print version information and exit.
+Commands:
+  help  Display help information about the specified command.
+```
+
+
+## Examples
+
+Server : ```java -jar hangmanGame-1.0-SNAPSHOT.jar -s```
+```
+Starting TCP server on port 9795 with pool thread of 2
+Hangman Server is listening on port 9795 with a pool thread of 2
+```
+
+Client : ```java -jar hangmanGame-1.0-SNAPSHOT.jar -c```
+```
+Starting TCP client and connecting to localhost:9795
+Connected to Hangman Server
+Server: INIT _______ 7
+Enter your guess (single letter or whole word):
+```
+
+
+
+
+
+
+
+
+
+
 
 # Hangman Game TCP Protocol Specification
 
@@ -26,14 +98,18 @@ This document specifies the application protocol for a Hangman game played over 
 - `ACK` (Client -> Server): Finalize connection establishment.
 
 ### Game Initialization
-- `INIT` (Server -> Client): Welcome message including the length of the word and initial display (e.g., "_ _ _ _ _").
+- `INIT <hiden word>` (Server -> Client): Welcome message including the length of the word and initial display (e.g., "_ _ _ _ _").
+
+by default Server support up to 2 simultaneous clients. Can be changed with the CLI and option -t --thread. See section CLI help for more informations
 
 ### Guessing
 - `GUESS <letter or word>` (Client -> Server): The client's guess.
-- `RESPONSE <status>` (Server -> Client): The server's response to the guess, where `<status>` includes the updated word display, remaining attempts, and any error/success codes.
+- ~~`RESPONSE <status>` (Server -> Client): The server's response to the guess, where `<status>` includes the updated word display, remaining attempts, and any error/success codes.~~
+- `HIT <hiden word>` (Server -> Client): the guess was correct. The letter has been added to the hidden word (e.g., "_ A _ _ _").
+- `MISS <attempts left> <hiden word>` (Server -> Client): the guess was incorrect. Attempts left was decreased (e.g., 6 "_ _ _ _ _")
 
 ### Game End
-- `GAME OVER <result>` (Server -> Client): Final game status, indicating win/loss and the correct word if lost.
+- `GAME OVER <result>` (Server -> Client): Final game status, indicating win/loss and the correct word.
 
 ### Connection Teardown
 - `END` (Client -> Server or Server -> Client): Initiate connection teardown.
@@ -42,56 +118,34 @@ This document specifies the application protocol for a Hangman game played over 
 ### Error Handling
 - `ERR <code>` (Server -> Client): Error message with specific code explaining the error.
 
+#### Error Code Definitions
+- `1`: Invalid command.
+- `2`: Already guessed character.
+- `3`: Invalid guess length.
+
 ## Section 4 - Examples
 
 ### Successful Guess Sequence
 
-```
-Client                               Server
-  |                                    |
-  |---SYN----------------------------->|
-  |<--SYN-ACK--------------------------|
-  |---ACK----------------------------->|
-  |                                    |
-  |<--INIT "5" "_ _ _ _ _"-------------|
-  |---GUESS "E"----------------------->|
-  |<--RESPONSE "0" "_ _ _ _ E"---------|
-  |                                    |
-  |---GUESS "ZEBRA"------------------->|
-  |<--GAME OVER "WIN" "ZEBRA"----------|
-  |                                    |
-  |---FIN----------------------------->|
-  |<--ACK------------------------------|
-  |<--FIN------------------------------|
-  |---ACK----------------------------->|
-  |                                    |
-```
 ```mermaid
 sequenceDiagram
   Client->>Server: SYN
   Server-->>Client: SYN ACK
   Client-->>Server: ACK
 
-  Server->>Client: INIT "5" "_ _ _ _ _"
-  Client->>Server: GUESS "E"
-  Server-->>Client: RESPONSE "0" "_ E _ _ _"
+  Server->>+Client: INIT "5" "_ _ _ _ _"
+  Client->>+Server: GUESS "E"
+  Server-->>-Client: HIT "_ E _ _ _"
 
-  Client->>Server: GUESS "ZEBRA"
-  Server-->>Client: GAME OVER "WIN" "Z E B R A"
+  Client->>+Server: GUESS "ZEBRA"
+  Server-->>-Client: GAME OVER "WIN" "Z E B R A"
 
-  Client->>Server: END
+  Client->>-Server: END
   Server-->>Client: ACK
   Server->>Client: END
 ```
 
-### Error Code Definitions
 
-- `0`: Successful guess.
-- `1`: Invalid character (not in the alphabet).
-- `2`: Already guessed character.
-- `3`: Failed guess (character not in the word).
-- `4`: Connection error.
-- `5`: Guess limit reached.
 
 ## Section 5 - Protocol Diagrams
 
@@ -100,33 +154,22 @@ sequenceDiagram
 
 ### Error Handling
 
-```
-Client                               Server
-  |                                    |
-  |---GUESS "1"----------------------->| (Invalid numeric guess)
-  |<--ERR "1"--------------------------|
-  |                                    |
-  |---GUESS "E"----------------------->| (Repeated guess)
-  |<--ERR "2"--------------------------|
-  |                                    |
-  |---GUESS "XYZ"--------------------->| (Incorrect length)
-  |<--ERR "1"--------------------------|
-  |                                    |
-```
-
 ```mermaid
 sequenceDiagram
-  Client->>Server: GUESS "1"
-  Server-->>Client: ERR "1"
+  Client->>+Server: GUESS "E"
+  Server-->>-Client: HIT "_ E _ _ _"
 
-  Client->>Server: GUESS "E"
-  Server-->>Client: ERR "2"
+  Client->>+Server: GUESS "N"
+  Server-->>-Client: MISS 5 "_ E _ _ _"
 
-  Client->>Server: GUESS "XYZ"
-  Server-->>Client: ERR "1"
+  Client->>+Server: GUESS "E"
+  Server-->>-Client: ERR 2 "Already guessed character"
 
-  Client->>Server: GUESS "E@_/"
-  Server->>Client: ERR "1"
+  Client->>+Server: GUESS "XYZ"
+  Server-->>-Client: ERR 3 "Invalid guess length"
+
+  Client->>+Server: ABCD "A"
+  Server-->>-Client: ERR 1 "Invalid command"
 ```
 
 
@@ -143,18 +186,6 @@ Edge cases could include network interruptions, client disconnections, and malfo
 
 ### Network Interruption
 
-```
-Client                               Server
-  |                                    |
-  |---GUESS "E"----------------------->| 
-  |--------(Network Interruption)------|
-  |<--(No Response, Timeout)-----------|
-  |                                    |
-  |---FIN----------------------------->| (Client closes connection after timeout)
-  |<--ACK------------------------------|
-  |                                    |
-```
-
 ```mermaid
 sequenceDiagram
   Client->>Server: GUESS "E"
@@ -162,12 +193,11 @@ sequenceDiagram
   Server->>Client: No Response, Timeout
 
   Client->>Server: END
+  Note right of Server: (Client closes connection after timeout)
   Server-->>Client: ACK
 ```
 
 In this diagram, the client sends a guess but experiences a network interruption that prevents the server's response. After a timeout, the client will close the connection.
-
-
 
 
 ## Tool used
