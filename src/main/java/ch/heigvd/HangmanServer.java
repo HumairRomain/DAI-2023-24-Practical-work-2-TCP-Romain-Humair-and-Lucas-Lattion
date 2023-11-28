@@ -9,18 +9,28 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class HangmanServer {
-    private static final int NUMBER_OF_THREADS = 2;
 
     public static void main(String[] args) {
 
-        int port = Integer.parseInt(args[0]);
+        if (args.length != 2) {
+            System.out.println("Usage: java Server <max thread> <port>");
+            System.exit(1);
+        }
+
+        int maxThread = Integer.parseInt(args[0]);
+        int port = Integer.parseInt(args[1]);
+
+        if(!isValidPort(port)){
+            System.out.println("Please provide a valid server port.");
+            System.exit(1);
+        }
 
         ExecutorService executor = null;
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println("Hangman Server is listening on port " + port);
+            System.out.println("Hangman Server is listening on port " + port + " with a pool thread of " + maxThread);
 
-            executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
+            executor = Executors.newFixedThreadPool(maxThread);
 
             while (true) {
                 try {
@@ -42,6 +52,10 @@ public class HangmanServer {
                 executor.shutdown();
             }
         }
+    }
+
+    private static boolean isValidPort(int port) {
+        return port >= 1 && port <= 65535;
     }
 
     private static class ClientHandler extends Thread {
@@ -84,7 +98,7 @@ public class HangmanServer {
                         String guess = inputLine.substring(6).trim().toLowerCase();
                         processGuess(guess, out);
                     } else {
-                        out.println("ERR Invalid command");
+                        out.println("ERR 1 Invalid command");
                     }
 
                     if (attemptsLeft <= 0) {
@@ -129,7 +143,7 @@ public class HangmanServer {
                     }
                 }
             } else if(guess.length() == 0 || guess.length() < visibleWord.length() || guess.length() > visibleWord.length()){
-                out.println("ERR 6 Invalid guess length");
+                out.println("ERR 3 Invalid guess length");
             } else if (guess.equalsIgnoreCase(wordToGuess)) {
                 visibleWord = wordToGuess;
                 out.println("GAME OVER WIN " + wordToGuess);

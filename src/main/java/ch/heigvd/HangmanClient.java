@@ -27,16 +27,20 @@ public class HangmanClient {
 
         if (args.length != 2) {
             System.out.println("Usage: java Client <server-ip> <port>");
-            return;
+            System.exit(1);
         }
-
 
         String serverIp = args[0];
         int serverPort = Integer.parseInt(args[1]);
 
         if(!isValidIpAddress(serverIp)){
             System.out.println("Please provide a valid server IP address.");
-            return;
+            System.exit(1);
+        }
+
+        if(!isValidPort(serverPort)){
+            System.out.println("Please provide a valid server port.");
+            System.exit(1);
         }
 
 
@@ -104,5 +108,9 @@ public class HangmanClient {
 
     private static boolean isValidIpAddress(String ipAddress) {
         return Pattern.matches(ipPattern, ipAddress) || ipAddress.equalsIgnoreCase("localhost");
+    }
+
+    private static boolean isValidPort(int port) {
+        return port >= 1 && port <= 65535;
     }
 }
