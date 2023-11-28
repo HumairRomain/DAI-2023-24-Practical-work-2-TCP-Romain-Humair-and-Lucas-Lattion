@@ -112,15 +112,14 @@ This document specifies the application protocol for a Hangman game played over 
 - `ACK` (Client -> Server): Finalize connection establishment.
 
 ### Game Initialization
-- `INIT <hiden word>` (Server -> Client): Welcome message including the length of the word and initial display (e.g., "_ _ _ _ _").
+- `INIT <hidden word>` (Server -> Client): Welcome message including the length of the word and initial display (e.g., "_ _ _ _ _").
 
 by default Server support up to 2 simultaneous clients. Can be changed with the CLI and option -t --thread. See section CLI help for more informations
 
 ### Guessing
 - `GUESS <letter or word>` (Client -> Server): The client's guess.
-- ~~`RESPONSE <status>` (Server -> Client): The server's response to the guess, where `<status>` includes the updated word display, remaining attempts, and any error/success codes.~~
-- `HIT <hiden word>` (Server -> Client): the guess was correct. The letter has been added to the hidden word (e.g., "_ A _ _ _").
-- `MISS <attempts left> <hiden word>` (Server -> Client): the guess was incorrect. Attempts left was decreased (e.g., 6 "_ _ _ _ _")
+- `HIT <hidden word>` (Server -> Client): the guess was correct. The letter has been added to the hidden word (e.g., "_ A _ _ _").
+- `MISS <attempts left> <hidden word>` (Server -> Client): the guess was incorrect. Attempts left was decreased (e.g., 6 "_ _ _ _ _")
 
 ### Game End
 - `GAME OVER <result>` (Server -> Client): Final game status, indicating win/loss and the correct word.
@@ -132,10 +131,10 @@ by default Server support up to 2 simultaneous clients. Can be changed with the 
 ### Error Handling
 - `ERR <code>` (Server -> Client): Error message with specific code explaining the error.
 
-#### Error Code Definitions
-- `1`: Invalid command.
-- `2`: Already guessed character.
-- `3`: Invalid guess length.
+#### Error `<Code>` Definitions
+   - `1`: Invalid command : When the client sends a non-existent or unsupported request.
+   - `2`: Already guessed character : When a letter was already guessed. But the same word can be guessed multiple times.
+   - `3`: Invalid guess length : When the word guessed is too short or to long
 
 ## Section 4 - Examples
 
