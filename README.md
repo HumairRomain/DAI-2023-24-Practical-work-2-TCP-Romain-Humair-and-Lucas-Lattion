@@ -5,6 +5,20 @@
 
 # A Hangman Game CLI
 
+## How to build the  CLI-Network application
+
+first, clone the repository.
+
+Then, you have two possibilities to build the jar file:
+1. IntelliJ
+    2. select "Maven Package as JAR file" on top right of IntelliJ
+    3. click "Run" button
+2. command line in the project folder
+    3. ```mvn dependency:resolve clean compile package```
+
+
+JAR file will be generated in the /target/ folder
+
 ## How to use the CLI
 
 minimum parameter is client or server mode
