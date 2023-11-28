@@ -51,3 +51,6 @@ todelete/
 
 # Except for README.md
 !README.md
+
+# Presentation
+*.pptx
