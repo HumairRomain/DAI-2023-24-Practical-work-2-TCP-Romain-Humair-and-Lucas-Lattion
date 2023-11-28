@@ -56,7 +56,7 @@ public class HangmanClient {
             String fromServer = in.readLine();
             System.out.println("Server: " + fromServer);
             //int availableGuess = fromServer.split(" ")[1].length(); // in case use the length
-            int availableGuess = 6;
+            int availableGuess = 7;
 
             // Check if the connection is initialized
             if (fromServer.startsWith("INIT")) {
