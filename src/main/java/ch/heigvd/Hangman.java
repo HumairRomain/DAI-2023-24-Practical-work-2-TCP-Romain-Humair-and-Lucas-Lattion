@@ -1,11 +1,5 @@
 package ch.heigvd;
 
-import java.io.*;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
