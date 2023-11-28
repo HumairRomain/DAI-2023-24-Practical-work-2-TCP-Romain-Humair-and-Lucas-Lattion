@@ -7,11 +7,12 @@ import java.util.*;
 
 public class HangmanServer {
 
-    private static final int PORT = 12345;
-
     public static void main(String[] args) {
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            System.out.println("Hangman Server is listening on port " + PORT);
+
+        int port = Integer.parseInt(args[0]);
+
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
+            System.out.println("Hangman Server is listening on port " + port);
 
             while (true) {
                 try {
@@ -21,12 +22,12 @@ public class HangmanServer {
 
                 } catch (IOException e) {
                     System.err.println("Exception caught when trying to listen on port "
-                            + PORT + " or listening for a connection");
+                            + port + " or listening for a connection");
                     System.err.println(e.getMessage());
                 }
             }
         } catch (IOException e) {
-            System.err.println("Could not listen on port " + PORT);
+            System.err.println("Could not listen on port " + port);
             System.err.println(e.getMessage());
         }
     }
@@ -82,7 +83,7 @@ public class HangmanServer {
                 System.out.println("Client " + clientID + " disconnected");
 
             } catch (IOException e) {
-                System.err.println("Exception caught when trying to interact with a client.");
+                System.err.println("Exception caught when trying to interact with client " + clientID);
                 e.printStackTrace();
             } finally {
                 try {
@@ -90,7 +91,7 @@ public class HangmanServer {
                         clientSocket.close();
                     }
                 } catch (IOException e) {
-                    System.err.println("Exception caught when trying to close a client socket.");
+                    System.err.println("Exception caught when trying to close client " + clientID + " socket.");
                     e.printStackTrace();
                 }
             }
