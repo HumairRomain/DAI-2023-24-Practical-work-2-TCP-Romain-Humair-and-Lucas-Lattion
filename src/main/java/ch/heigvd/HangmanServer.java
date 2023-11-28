@@ -71,7 +71,7 @@ public class HangmanServer {
         public ClientHandler(Socket socket) {
             this.clientSocket = socket;
             this.wordToGuess = fetchRandomWord().toLowerCase();
-            this.attemptsLeft = wordToGuess.length(); // Set attempts based on word length or a fixed value
+            this.attemptsLeft = 6; //wordToGuess.length(); // Set attempts based on word length or a fixed value
             this.visibleWord = "_".repeat(wordToGuess.length());
         }
 
